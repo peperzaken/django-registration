@@ -10,6 +10,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.sites.shortcuts import get_current_site
 from django.core import signing
 from django.template.loader import render_to_string
+from django.core.mail import send_mail
 
 from registration import signals
 from registration.views import ActivationView as BaseActivationView
@@ -30,6 +31,7 @@ class RegistrationView(BaseRegistrationView):
 
     """
     email_body_template = 'registration/activation_email.txt'
+    email_body_template_html = 'registration/activation_email.html'
     email_subject_template = 'registration/activation_email_subject.txt'
 
     def register(self, form):
@@ -40,7 +42,7 @@ class RegistrationView(BaseRegistrationView):
         return new_user
 
     def get_success_url(self, user):
-        return ('registration_complete', (), {})
+        return 'registration_complete', (), {}
 
     def create_inactive_user(self, form):
         """
@@ -97,7 +99,8 @@ class RegistrationView(BaseRegistrationView):
         subject = ''.join(subject.splitlines())
         message = render_to_string(self.email_body_template,
                                    context)
-        user.email_user(subject, message, settings.DEFAULT_FROM_EMAIL)
+        html_message = render_to_string(self.email_body_template_html, context)
+        user.email_user(subject, message, settings.DEFAULT_FROM_EMAIL, html_message=html_message)
 
 
 class ActivationView(BaseActivationView):
